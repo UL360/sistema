@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Urban Loop 360° — Cobros</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --or: #FF5F00;
+  --bg: #F5F4F0;
+  --wh: #FFFFFF;
+  --dk: #1a1a1a;
+  --gr: #888;
+  --bd: #E5E4E0;
+  --fH: 'Segoe UI', system-ui, sans-serif;
+
+  --pagado-bg: #EAF3DE; --pagado-tx: #27500A; --pagado-bd: #A8D4A0;
+  --vencido-bg: #FCEBEB; --vencido-tx: #791F1F; --vencido-bd: #F09595;
+  --pendiente-bg: #FAEEDA; --pendiente-tx: #633806; --pendiente-bd: #EFC77A;
+  --libre-bg: #F5F4F0; --libre-tx: #9CA3AF; --libre-bd: #E5E4E0;
+}
+
+body { font-family: var(--fH); background: var(--bg); color: var(--dk); min-height: 100vh; }
+
+/* ── Login ── */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+}
+.login-card {
+  background: var(--wh); border-radius: 20px; padding: 40px 36px;
+  text-align: center; width: 100%; max-width: 340px;
+  border: 1px solid var(--bd); box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+.login-card .logo { font-size: 36px; margin-bottom: 12px; }
+.login-card h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.login-card p { font-size: 13px; color: var(--gr); margin-bottom: 28px; }
+.btn-google {
+  width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid var(--bd);
+  background: var(--wh); font-size: 14px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: background .15s;
+}
+.btn-google:hover { background: var(--bg); }
+.btn-google svg { width: 20px; height: 20px; }
+#login-error { font-size: 12px; color: #A32D2D; margin-top: 12px; display: none; }
+
+/* ── App shell ── */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+
+header {
+  background: var(--wh); border-bottom: 1px solid var(--bd);
+  padding: 0 20px; height: 56px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-logo { font-size: 20px; font-weight: 800; color: var(--or); }
+.header-sub { font-size: 12px; color: var(--gr); }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+  border: 1.5px solid var(--bd);
+}
+.btn-signout {
+  font-size: 12px; color: var(--gr); background: none; border: 1px solid var(--bd);
+  border-radius: 8px; padding: 5px 10px; cursor: pointer;
+}
+.btn-signout:hover { background: var(--bg); }
+
+/* ── Tabs ── */
+.tabs {
+  background: var(--wh); border-bottom: 1px solid var(--bd);
+  padding: 0 20px; display: flex; gap: 4px; overflow-x: auto;
+}
+.tab {
+  padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--gr);
+  border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: color .15s;
+}
+.tab.on { color: var(--or); border-bottom-color: var(--or); }
+
+/* ── Contenido ── */
+main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.panel { display: none; }
+.panel.on { display: block; }
+
+/* ── Filtros ── */
+.filtros {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
+}
+.filtros select, .filtros input {
+  padding: 8px 12px; border-radius: 10px; border: 1px solid var(--bd);
+  background: var(--wh); font-size: 13px; color: var(--dk); font-family: var(--fH);
+}
+.filtros select:focus, .filtros input:focus { outline: 2px solid var(--or); }
+.btn-export {
+  margin-left: auto; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--bd);
+  background: var(--wh); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--dk);
+}
+.btn-export:hover { background: var(--bg); }
+
+/* ── Stats cards ── */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--wh); border-radius: 12px; padding: 14px 16px;
+  border: 1px solid var(--bd);
+}
+.stat-card .label { font-size: 11px; color: var(--gr); margin-bottom: 4px; }
+.stat-card .value { font-size: 22px; font-weight: 700; }
+.stat-card.vencido .value { color: #A32D2D; }
+.stat-card.pendiente .value { color: #854F0B; }
+
+/* ── Tabla de pagos ── */
+.tabla-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--bd); }
+.tabla-cobros {
+  width: 100%; border-collapse: collapse; background: var(--wh);
+  min-width: 860px;
+}
+.tabla-cobros th {
+  font-size: 11px; font-weight: 600; color: var(--gr); text-align: center;
+  padding: 10px 6px; background: var(--bg); border-bottom: 1px solid var(--bd);
+}
+.tabla-cobros th.col-nombre { text-align: left; padding-left: 16px; min-width: 180px; }
+.tabla-cobros td { padding: 6px 4px; border-bottom: 0.5px solid var(--bd); }
+.tabla-cobros tr:last-child td { border-bottom: none; }
+.tabla-cobros td.col-nombre { padding-left: 16px; }
+
+.nombre-cell .n { font-size: 13px; font-weight: 600; }
+.nombre-cell .s { font-size: 11px; color: var(--gr); margin-top: 1px; }
+
+.grupo-label {
+  font-size: 10px; font-weight: 700; color: var(--gr); text-transform: uppercase;
+  letter-spacing: .6px; padding: 10px 16px 4px; background: var(--bg);
+}
+
+.mes-btn {
+  width: 100%; padding: 5px 2px; border-radius: 6px; border: none;
+  font-size: 10px; font-weight: 600; cursor: pointer; text-align: center;
+  transition: opacity .1s; line-height: 1.3;
+}
+.mes-btn:hover { opacity: .75; }
+.mes-btn.pagado   { background: var(--pagado-bg);   color: var(--pagado-tx); }
+.mes-btn.vencido  { background: var(--vencido-bg);  color: var(--vencido-tx); }
+.mes-btn.pendiente{ background: var(--pendiente-bg); color: var(--pendiente-tx); }
+.mes-btn.libre    { background: var(--libre-bg);     color: var(--libre-tx); border: 1px solid var(--libre-bd); }
+
+/* ── Precios ── */
+.precios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 12px; }
+.precio-card {
+  background: var(--wh); border-radius: 14px; padding: 18px 20px;
+  border: 1px solid var(--bd);
+}
+.precio-card .rango { font-size: 12px; color: var(--gr); margin-bottom: 6px; }
+.precio-card .monto { font-size: 24px; font-weight: 800; color: var(--or); }
+.precio-card .detalle { font-size: 12px; color: var(--gr); margin-top: 4px; }
+.precio-card .btn-edit {
+  margin-top: 12px; font-size: 12px; color: var(--or); background: none;
+  border: 1px solid rgba(255,95,0,.3); border-radius: 8px; padding: 5px 12px;
+  cursor: pointer; font-weight: 600;
+}
+
+/* ── Modal ── */
+.modal-bg {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 500; align-items: flex-end; justify-content: center;
+}
+.modal-bg.on { display: flex; }
+.modal {
+  background: var(--wh); border-radius: 20px 20px 0 0; width: 100%;
+  max-width: 480px; max-height: 88vh; overflow-y: auto; padding: 20px;
+}
+.modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.modal label { display: block; font-size: 12px; font-weight: 600; color: var(--gr); margin-bottom: 4px; margin-top: 12px; text-transform: uppercase; letter-spacing: .4px; }
+.modal input, .modal select, .modal textarea {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--bd);
+  font-size: 13px; font-family: var(--fH); color: var(--dk); background: var(--bg);
+}
+.modal textarea { resize: vertical; min-height: 70px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 20px; }
+.btn-primary {
+  flex: 1; padding: 12px; border-radius: 12px; border: none;
+  background: var(--or); color: white; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.btn-secondary {
+  padding: 12px 20px; border-radius: 12px; border: 1px solid var(--bd);
+  background: var(--wh); font-size: 14px; font-weight: 600; cursor: pointer;
+}
+
+/* ── Leyenda ── */
+.leyenda { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+.leyenda span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gr); }
+.leyenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 60px 20px; color: var(--gr); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="logo">🏙️</div>
+    <h1>Urban Loop 360°</h1>
+    <p>Sistema de cobros · Solo administradores</p>
+    <button class="btn-google" onclick="Cobros.loginGoogle()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Entrar con Google
+    </button>
+    <div id="login-error">Acceso denegado. Tu cuenta no tiene permisos.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">Urban Loop 360°</span>
+      <span class="header-sub">· Cobros</span>
+    </div>
+    <div class="header-right">
+      <img id="user-avatar" class="user-avatar" src="" alt="">
+      <span id="user-name" style="font-size:13px;"></span>
+      <button class="btn-signout" onclick="Cobros.signOut()">Salir</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" onclick="Cobros.tab('pagos',this)">💳 Pagos</button>
+    <button class="tab" onclick="Cobros.tab('precios',this)">📋 Tabla de precios</button>
+  </div>
+
+  <main>
+
+    <!-- PANEL PAGOS -->
+    <div id="panel-pagos" class="panel on">
+
+      <div class="stats" id="stats-cards">
+        <div class="stat-card"><div class="label">Cobrado en 2026</div><div class="value" id="stat-cobrado">—</div></div>
+        <div class="stat-card vencido"><div class="label">Vencido sin cobrar</div><div class="value" id="stat-vencido">—</div></div>
+        <div class="stat-card pendiente"><div class="label">Pendiente del año</div><div class="value" id="stat-pendiente">—</div></div>
+        <div class="stat-card"><div class="label">Clientes activos</div><div class="value" id="stat-clientes">—</div></div>
+      </div>
+
+      <div class="filtros">
+        <select id="f-tipo" onchange="Cobros.filtrar()">
+          <option value="">Todos</option>
+          <option value="comercio">Comercios</option>
+          <option value="municipio">Municipios</option>
+        </select>
+        <select id="f-provincia" onchange="Cobros.filtrarProvincia()">
+          <option value="">Todas las provincias</option>
+        </select>
+        <select id="f-ciudad" onchange="Cobros.filtrar()">
+          <option value="">Todas las ciudades</option>
+        </select>
+        <select id="f-estado" onchange="Cobros.filtrar()">
+          <option value="">Todos los estados</option>
+          <option value="vencido">Con vencidos</option>
+          <option value="pendiente">Solo pendientes</option>
+          <option value="pagado">Al día</option>
+        </select>
+        <input id="f-buscar" type="text" placeholder="🔍 Buscar..." oninput="Cobros.filtrar()" style="min-width:160px;">
+        <button class="btn-export" onclick="Cobros.exportarExcel()">⬇ Exportar Excel</button>
+      </div>
+
+      <div class="tabla-wrap">
+        <table class="tabla-cobros">
+          <thead>
+            <tr>
+              <th class="col-nombre">Comercio / municipio</th>
+              <th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th>
+              <th>May</th><th>Jun</th><th>Jul</th><th>Ago</th>
+              <th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body">
+            <tr><td colspan="13" class="loading">Cargando datos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="leyenda">
+        <span><i style="background:var(--pagado-bg);border:1px solid var(--pagado-bd);"></i>Pagado</span>
+        <span><i style="background:var(--vencido-bg);border:1px solid var(--vencido-bd);"></i>Vencido</span>
+        <span><i style="background:var(--pendiente-bg);border:1px solid var(--pendiente-bd);"></i>Pendiente</span>
+        <span><i style="background:var(--libre-bg);border:1px solid var(--libre-bd);"></i>Sin facturar</span>
+      </div>
+    </div>
+
+    <!-- PANEL PRECIOS -->
+    <div id="panel-precios" class="panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div style="font-size:16px;font-weight:700;">Tabla de precios</div>
+          <div style="font-size:12px;color:var(--gr);margin-top:2px;">Por escala de habitantes · municipios y comercios</div>
+        </div>
+        <button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Agregar escala</button>
+      </div>
+      <div class="precios-grid" id="precios-grid">
+        <div class="loading">Cargando precios...</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL PAGO -->
+<div class="modal-bg" id="modal-pago-bg" onclick="if(event.target===this)Cobros.cerrarModal('pago')">
+  <div class="modal">
+    <h2 id="modal-pago-titulo">Registrar pago</h2>
+    <input type="hidden" id="mp-cliente-id">
+    <input type="hidden" id="mp-mes">
+
+    <label>Estado</label>
+    <select id="mp-estado">
+      <option value="pagado">✅ Pagado</option>
+      <option value="pendiente">⏳ Pendiente</option>
+      <option value="vencido">❌ Vencido</option>
+      <option value="libre">— Sin facturar</option>
+    </select>
+
+    <label>Monto</label>
+    <input type="number" id="mp-monto" placeholder="Ej: 300000">
+
+    <label>N° comprobante</label>
+    <input type="text" id="mp-comprobante" placeholder="Ej: FC-0001-00000123">
+
+    <label>Fecha de pago</label>
+    <input type="date" id="mp-fecha">
+
+    <label>Notas</label>
+    <textarea id="mp-notas" placeholder="Ej: Pagó transferencia, confirmado por WhatsApp"></textarea>
+
+    <div style="margin-top:16px;padding:12px;background:#EFF8FF;border-radius:10px;border:1px solid #BAE0FD;">
+      <div style="font-size:11px;font-weight:700;color:#1A5C8A;margin-bottom:8px;">📱 Contacto rápido</div>
+      <div id="mp-contacto" style="font-size:12px;color:#2E7AB0;line-height:1.8;"></div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="Cobros.cerrarModal('pago')">Cancelar</button>
+      <button class="btn-primary" onclick="Cobros.guardarPago()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRECIO -->
+<div class="modal-bg" id="modal-precio-bg" onclick="if(event.target===this)Cobros.cerrarModal('precio')">
+  <div class="modal">
+    <h2 id="modal-precio-titulo">Nueva escala de precio</h2>
+    <input type="hidden" id="pp-id">
+
+    <label>Nombre de la escala</label>
+    <input type="text" id="pp-nombre" placeholder="Ej: Municipio mediano">
+
+    <label>Habitantes mínimo</label>
+    <input type="number" id="pp-min" placeholder="Ej: 10000">
+
+    <label>Habitantes máximo</label>
+    <input type="number" id="pp-max" placeholder="Ej: 20000 (dejar vacío para 'más de X')">
+
+    <label>Precio mensual ($)</label>
+    <input type="number" id="pp-precio" placeholder="Ej: 100000">
+
+    <label>Tipo</label>
+    <select id="pp-tipo">
+      <option value="municipio">Municipio</option>
+      <option value="comercio">Comercio</option>
+      <option value="ambos">Ambos</option>
+    </select>
+
+    <label>Notas</label>
+    <textarea id="pp-notas" placeholder="Ej: Incluye hasta 3 usuarios admin"></textarea>
+
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="Cobros.cerrarModal('precio')">Cancelar</button>
+      <button class="btn-primary" onclick="Cobros.guardarPrecio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const AÑO = new Date().getFullYear();
+const MES_ACTUAL = new Date().getMonth(); // 0-based
+
+// ── Emails autorizados ──────────────────────────────────────────────
+// Agregá acá los emails de Google que pueden entrar
+const ADMINS_AUTORIZADOS = [
+  // 'tu@email.com',   ← reemplazá con tu email de Google
+];
+
+const firebaseConfig = {
+  apiKey: "AIzaSyACvfJCrmCvP-C1ELYIPwqlZAdRmrh4mpo",
+  authDomain: "urbanloop360.firebaseapp.com",
+  projectId: "urbanloop360",
+  storageBucket: "urbanloop360.firebasestorage.app",
+  messagingSenderId: "1002543875761",
+  appId: "1:1002543875761:web:6cd4ec5e8b76178c720490"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+const Cobros = {
+  _clientes: [],    // negocios + municipios de Firebase
+  _cobros: {},      // { clienteId: { '2026-01': {estado,monto,...}, ... } }
+  _precios: [],
+
+  // ── Auth ───────────────────────────────────────────────────────────
+  loginGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(e => {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('login-error').textContent = 'Error al iniciar sesión: ' + e.message;
+    });
+  },
+
+  signOut() {
+    if (confirm('¿Salir del sistema?')) auth.signOut();
+  },
+
+  _checkAuth(user) {
+    if (!user) {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      return false;
+    }
+    // Si ADMINS_AUTORIZADOS está vacío, se permite cualquier cuenta (modo desarrollo)
+    if (ADMINS_AUTORIZADOS.length > 0 && !ADMINS_AUTORIZADOS.includes(user.email)) {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('login-error').textContent = 'Acceso denegado. Tu cuenta no tiene permisos.';
+      auth.signOut();
+      return false;
+    }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+    return true;
+  },
+
+  // ── Tabs ───────────────────────────────────────────────────────────
+  tab(id, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('panel-' + id).classList.add('on');
+    if (id === 'precios') this.renderPrecios();
+  },
+
+  // ── Carga de datos ─────────────────────────────────────────────────
+  async cargarTodo() {
+    try {
+      // Negocios
+      const snapN = await db.collection('negocios').orderBy('nombre').get();
+      const negocios = snapN.docs.map(d => ({ id: d.id, tipo: 'comercio', ...d.data() }));
+
+      // Municipios (desde la colección loops con source=municipio, o colección propia si existe)
+      let municipios = [];
+      try {
+        const snapM = await db.collection('municipios').orderBy('nombre').get();
+        municipios = snapM.docs.map(d => ({ id: d.id, tipo: 'municipio', ...d.data() }));
+      } catch(e) {
+        // La colección municipios aún no existe — OK, arranca vacía
+      }
+
+      this._clientes = [...municipios, ...negocios];
+
+      // Cobros
+      const snapC = await db.collection('cobros').get();
+      this._cobros = {};
+      snapC.docs.forEach(d => {
+        const data = d.data();
+        if (!this._cobros[data.clienteId]) this._cobros[data.clienteId] = {};
+        this._cobros[data.clienteId][data.periodo] = { id: d.id, ...data };
+      });
+
+      // Precios
+      const snapP = await db.collection('precios').orderBy('min').get();
+      this._precios = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      this._poblarFiltros();
+      this.filtrar();
+    } catch(e) {
+      console.error('Error cargando datos:', e);
+      document.getElementById('tabla-body').innerHTML =
+        `<tr><td colspan="13" class="loading" style="color:#A32D2D;">Error al cargar datos: ${e.message}</td></tr>`;
+    }
+  },
+
+  _poblarFiltros() {
+    const provincias = [...new Set(this._clientes.map(c => c.provincia).filter(Boolean))].sort();
+    const selProv = document.getElementById('f-provincia');
+    selProv.innerHTML = '<option value="">Todas las provincias</option>' +
+      provincias.map(p => `<option value="${p}">${p}</option>`).join('');
+  },
+
+  filtrarProvincia() {
+    const prov = document.getElementById('f-provincia').value;
+    const ciudades = [...new Set(
+      this._clientes.filter(c => !prov || c.provincia === prov).map(c => c.ciudad).filter(Boolean)
+    )].sort();
+    const selCiu = document.getElementById('f-ciudad');
+    selCiu.innerHTML = '<option value="">Todas las ciudades</option>' +
+      ciudades.map(c => `<option value="${c}">${c}</option>`).join('');
+    this.filtrar();
+  },
+
+  filtrar() {
+    const tipo    = document.getElementById('f-tipo').value;
+    const prov    = document.getElementById('f-provincia').value;
+    const ciudad  = document.getElementById('f-ciudad').value;
+    const estado  = document.getElementById('f-estado').value;
+    const buscar  = document.getElementById('f-buscar').value.toLowerCase();
+
+    let lista = this._clientes.filter(c => {
+      if (tipo   && c.tipo     !== tipo)   return false;
+      if (prov   && c.provincia !== prov)  return false;
+      if (ciudad && c.ciudad   !== ciudad) return false;
+      if (buscar && !c.nombre?.toLowerCase().includes(buscar)) return false;
+      if (estado) {
+        const cobrosCliente = this._cobros[c.id] || {};
+        const meses = Object.values(cobrosCliente);
+        if (estado === 'vencido'   && !meses.some(m => m.estado === 'vencido'))   return false;
+        if (estado === 'pendiente' && !meses.some(m => m.estado === 'pendiente')) return false;
+        if (estado === 'pagado'    && meses.some(m => m.estado === 'vencido'))    return false;
+      }
+      return true;
+    });
+
+    this._renderTabla(lista);
+    this._renderStats(lista);
+  },
+
+  _renderTabla(lista) {
+    if (!lista.length) {
+      document.getElementById('tabla-body').innerHTML =
+        '<tr><td colspan="13" class="loading">Sin resultados</td></tr>';
+      return;
+    }
+
+    const grupos = { municipio: [], comercio: [] };
+    lista.forEach(c => (grupos[c.tipo] || grupos.comercio).push(c));
+
+    let html = '';
+    if (grupos.municipio.length) {
+      html += `<tr><td colspan="13" class="grupo-label">Municipios</td></tr>`;
+      grupos.municipio.forEach(c => { html += this._filaCliente(c); });
+    }
+    if (grupos.comercio.length) {
+      html += `<tr><td colspan="13" class="grupo-label">Comercios</td></tr>`;
+      grupos.comercio.forEach(c => { html += this._filaCliente(c); });
+    }
+
+    document.getElementById('tabla-body').innerHTML = html;
+  },
+
+  _filaCliente(c) {
+    const cobrosC = this._cobros[c.id] || {};
+    let celdas = '';
+    for (let m = 0; m < 12; m++) {
+      const periodo = `${AÑO}-${String(m+1).padStart(2,'0')}`;
+      const registro = cobrosC[periodo];
+      const estado = registro?.estado || (m <= MES_ACTUAL ? 'pendiente' : 'libre');
+      const monto  = registro?.monto || c.monto || '';
+      const label  = estado === 'pagado' ? '✓' : estado === 'vencido' ? '✗' : estado === 'pendiente' ? '⏳' : '—';
+      const montoLabel = monto ? ` $${(monto/1000).toFixed(0)}k` : '';
+      celdas += `<td><button class="mes-btn ${estado}"
+        onclick="Cobros.abrirModalPago('${c.id}',${m},'${estado}')"
+        title="${MESES[m]} ${AÑO}${monto ? ' · $'+Number(monto).toLocaleString('es-AR') : ''}"
+        >${label}${montoLabel}</button></td>`;
+    }
+    const sub = [c.ciudad, c.provincia].filter(Boolean).join(', ') || c.tipo;
+    return `<tr>
+      <td class="col-nombre">
+        <div class="nombre-cell">
+          <div class="n">${c.nombre || '—'}</div>
+          <div class="s">${sub}${c.monto ? ' · $'+Number(c.monto).toLocaleString('es-AR')+'/mes' : ''}</div>
+        </div>
+      </td>${celdas}</tr>`;
+  },
+
+  _renderStats(lista) {
+    let cobrado = 0, vencido = 0, pendiente = 0;
+    lista.forEach(c => {
+      const cobrosC = this._cobros[c.id] || {};
+      for (let m = 0; m <= MES_ACTUAL; m++) {
+        const periodo = `${AÑO}-${String(m+1).padStart(2,'0')}`;
+        const reg = cobrosC[periodo];
+        const monto = reg?.monto || c.monto || 0;
+        const est   = reg?.estado || 'pendiente';
+        if (est === 'pagado')    cobrado   += Number(monto);
+        if (est === 'vencido')   vencido   += Number(monto);
+        if (est === 'pendiente') pendiente += Number(monto);
+      }
+    });
+    const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+    document.getElementById('stat-cobrado').textContent   = fmt(cobrado);
+    document.getElementById('stat-vencido').textContent   = fmt(vencido);
+    document.getElementById('stat-pendiente').textContent = fmt(pendiente);
+    document.getElementById('stat-clientes').textContent  = lista.length;
+  },
+
+  // ── Modal pago ─────────────────────────────────────────────────────
+  abrirModalPago(clienteId, mesIdx, estadoActual) {
+    const c = this._clientes.find(x => x.id === clienteId);
+    const periodo = `${AÑO}-${String(mesIdx+1).padStart(2,'0')}`;
+    const reg = this._cobros[clienteId]?.[periodo] || {};
+
+    document.getElementById('modal-pago-titulo').textContent =
+      `${c?.nombre} · ${MESES[mesIdx]} ${AÑO}`;
+    document.getElementById('mp-cliente-id').value = clienteId;
+    document.getElementById('mp-mes').value = periodo;
+    document.getElementById('mp-estado').value = reg.estado || estadoActual;
+    document.getElementById('mp-monto').value = reg.monto || c?.monto || '';
+    document.getElementById('mp-comprobante').value = reg.comprobante || '';
+    document.getElementById('mp-fecha').value = reg.fecha || '';
+    document.getElementById('mp-notas').value = reg.notas || '';
+
+    // Contacto
+    let contacto = '';
+    if (c?.tel)   contacto += `📞 <a href="tel:${c.tel}">${c.tel}</a><br>`;
+    if (c?.tel)   contacto += `💬 <a href="https://wa.me/549${c.tel.replace(/\D/g,'')}" target="_blank">WhatsApp</a><br>`;
+    if (c?.email) contacto += `✉️ <a href="mailto:${c.email}">${c.email}</a>`;
+    document.getElementById('mp-contacto').innerHTML = contacto || '<span style="color:var(--gr)">Sin datos de contacto cargados</span>';
+
+    document.getElementById('modal-pago-bg').classList.add('on');
+  },
+
+  async guardarPago() {
+    const clienteId  = document.getElementById('mp-cliente-id').value;
+    const periodo    = document.getElementById('mp-mes').value;
+    const estado     = document.getElementById('mp-estado').value;
+    const monto      = document.getElementById('mp-monto').value;
+    const comprobante= document.getElementById('mp-comprobante').value;
+    const fecha      = document.getElementById('mp-fecha').value;
+    const notas      = document.getElementById('mp-notas').value;
+
+    const data = { clienteId, periodo, estado, monto: Number(monto)||0, comprobante, fecha, notas, updatedAt: Date.now() };
+
+    try {
+      const existing = this._cobros[clienteId]?.[periodo];
+      if (existing?.id) {
+        await db.collection('cobros').doc(existing.id).update(data);
+      } else {
+        await db.collection('cobros').add(data);
+      }
+      await this.cargarTodo();
+      this.cerrarModal('pago');
+    } catch(e) {
+      alert('Error al guardar: ' + e.message);
+    }
+  },
+
+  // ── Modal precios ──────────────────────────────────────────────────
+  renderPrecios() {
+    if (!this._precios.length) {
+      document.getElementById('precios-grid').innerHTML =
+        '<div class="loading">Sin escalas de precio. Agregá la primera.</div>';
+      return;
+    }
+    document.getElementById('precios-grid').innerHTML = this._precios.map(p => {
+      const rango = p.max
+        ? `${Number(p.min).toLocaleString('es-AR')} a ${Number(p.max).toLocaleString('es-AR')} hab.`
+        : `Más de ${Number(p.min).toLocaleString('es-AR')} hab.`;
+      return `<div class="precio-card">
+        <div class="rango">${rango}</div>
+        <div class="monto">$${Number(p.precio).toLocaleString('es-AR')}</div>
+        <div class="detalle">${p.nombre || ''} · por mes</div>
+        ${p.notas ? `<div class="detalle" style="margin-top:4px;font-style:italic;">${p.notas}</div>` : ''}
+        <button class="btn-edit" onclick="Cobros.abrirModalPrecio('${p.id}')">✏ Editar</button>
+      </div>`;
+    }).join('');
+  },
+
+  abrirModalPrecio(id) {
+    const p = id ? this._precios.find(x => x.id === id) : null;
+    document.getElementById('modal-precio-titulo').textContent = p ? 'Editar escala' : 'Nueva escala de precio';
+    document.getElementById('pp-id').value      = p?.id || '';
+    document.getElementById('pp-nombre').value  = p?.nombre || '';
+    document.getElementById('pp-min').value     = p?.min || '';
+    document.getElementById('pp-max').value     = p?.max || '';
+    document.getElementById('pp-precio').value  = p?.precio || '';
+    document.getElementById('pp-tipo').value    = p?.tipo || 'municipio';
+    document.getElementById('pp-notas').value   = p?.notas || '';
+    document.getElementById('modal-precio-bg').classList.add('on');
+  },
+
+  async guardarPrecio() {
+    const id = document.getElementById('pp-id').value;
+    const data = {
+      nombre: document.getElementById('pp-nombre').value,
+      min:    Number(document.getElementById('pp-min').value) || 0,
+      max:    Number(document.getElementById('pp-max').value) || null,
+      precio: Number(document.getElementById('pp-precio').value) || 0,
+      tipo:   document.getElementById('pp-tipo').value,
+      notas:  document.getElementById('pp-notas').value,
+    };
+    try {
+      if (id) {
+        await db.collection('precios').doc(id).update(data);
+      } else {
+        await db.collection('precios').add(data);
+      }
+      const snapP = await db.collection('precios').orderBy('min').get();
+      this._precios = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
+      this.renderPrecios();
+      this.cerrarModal('precio');
+    } catch(e) {
+      alert('Error al guardar: ' + e.message);
+    }
+  },
+
+  cerrarModal(which) {
+    document.getElementById(`modal-${which}-bg`).classList.remove('on');
+  },
+
+  // ── Exportar Excel (CSV simple) ────────────────────────────────────
+  exportarExcel() {
+    let csv = 'Nombre,Tipo,Ciudad,Provincia,Monto/mes';
+    MESES.forEach(m => { csv += `,${m} ${AÑO}`; });
+    csv += '\n';
+
+    this._clientes.forEach(c => {
+      let fila = `"${c.nombre||''}",${c.tipo},"${c.ciudad||''}","${c.provincia||''}",${c.monto||0}`;
+      for (let m = 0; m < 12; m++) {
+        const periodo = `${AÑO}-${String(m+1).padStart(2,'0')}`;
+        const reg = this._cobros[c.id]?.[periodo];
+        fila += `,${reg?.estado || (m <= MES_ACTUAL ? 'pendiente' : '-')}`;
+      }
+      csv += fila + '\n';
+    });
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `cobros_${AÑO}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  },
+};
+
+// ── Escuchar auth ───────────────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (Cobros._checkAuth(user)) {
+    Cobros.cargarTodo();
+  }
+});
+</script>
+</body>
+</html>
