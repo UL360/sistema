@@ -153,19 +153,61 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 .mes-btn.libre    { background: var(--libre-bg);     color: var(--libre-tx); border: 1px solid var(--libre-bd); }
 
 /* ── Precios ── */
-.precios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 12px; }
+.tar-section-title {
+  display: flex; align-items: center; gap: 10px; margin: 24px 0 12px;
+}
+.tar-section-title:first-of-type { margin-top: 0; }
+.tar-st-icon { font-size: 20px; }
+.tar-st-text h3 { font-size: 15px; font-weight: 800; }
+.tar-st-text p  { font-size: 11px; color: var(--gr); margin-top: 1px; }
+.tar-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; padding: 3px 9px; border-radius: 20px;
+}
+.tar-badge-muni { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+.tar-badge-neg  { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+
+.precios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 10px; }
 .precio-card {
-  background: var(--wh); border-radius: 14px; padding: 18px 20px;
-  border: 1px solid var(--bd);
+  background: var(--wh); border-radius: 14px; padding: 16px 16px;
+  border: 1.5px solid var(--bd); position: relative;
 }
-.precio-card .rango { font-size: 12px; color: var(--gr); margin-bottom: 6px; }
-.precio-card .monto { font-size: 24px; font-weight: 800; color: var(--or); }
-.precio-card .detalle { font-size: 12px; color: var(--gr); margin-top: 4px; }
+.precio-card.muni { border-color: #BFDBFE; }
+.precio-card.neg  { border-color: #A7F3D0; }
+.precio-card.featured { border-color: var(--or); box-shadow: 0 0 0 1px var(--or); }
+.precio-card.featured::before {
+  content: '⭐ Popular'; position: absolute; top: -10px; left: 14px;
+  background: var(--or); color: #fff; font-size: 10px; font-weight: 700;
+  padding: 2px 9px; border-radius: 20px;
+}
+.precio-card .rango { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gr); margin-bottom: 4px; }
+.precio-card .plan-nombre { font-size: 14px; font-weight: 800; margin-bottom: 10px; }
+.precio-card .monto { font-size: 28px; font-weight: 900; color: var(--or); line-height: 1; }
+.precio-card .monto .cur { font-size: 14px; font-weight: 700; vertical-align: top; margin-top: 4px; display: inline-block; }
+.precio-card .monto .per { font-size: 11px; font-weight: 400; color: var(--gr); }
+.precio-card .alta { font-size: 11px; color: var(--gr); margin-top: 3px; margin-bottom: 10px; }
+.precio-card .features { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.precio-card .features li { font-size: 11px; display: flex; gap: 5px; align-items: flex-start; }
+.precio-card .features li::before { content: '✓'; color: var(--or); font-weight: 700; flex-shrink: 0; }
 .precio-card .btn-edit {
-  margin-top: 12px; font-size: 12px; color: var(--or); background: none;
-  border: 1px solid rgba(255,95,0,.3); border-radius: 8px; padding: 5px 12px;
-  cursor: pointer; font-weight: 600;
+  margin-top: 12px; width: 100%; font-size: 11px; color: var(--or); background: none;
+  border: 1px solid rgba(255,95,0,.3); border-radius: 8px; padding: 6px;
+  cursor: pointer; font-weight: 700;
 }
+.precio-card .btn-edit:hover { background: rgba(255,95,0,.06); }
+
+.tar-nota {
+  background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px;
+  padding: 10px 14px; font-size: 11px; color: #78350F; margin-bottom: 18px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.tar-turistas {
+  background: linear-gradient(135deg,#1E40AF,#FF5F00); border-radius: 12px;
+  padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
+}
+.tar-turistas .icon { font-size: 24px; flex-shrink: 0; }
+.tar-turistas .txt-title { color: #fff; font-weight: 800; font-size: 13px; margin-bottom: 2px; }
+.tar-turistas .txt-sub { color: rgba(255,255,255,.85); font-size: 11px; line-height: 1.4; }
 
 /* ── Modal ── */
 .modal-bg {
@@ -303,15 +345,55 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 
     <!-- PANEL PRECIOS -->
     <div id="panel-precios" class="panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div>
           <div style="font-size:16px;font-weight:700;">Tabla de precios</div>
-          <div style="font-size:12px;color:var(--gr);margin-top:2px;">Por escala de habitantes · municipios y comercios</div>
+          <div style="font-size:12px;color:var(--gr);margin-top:2px;">Municipios y negocios · Precios en USD · Factura C</div>
         </div>
-        <button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Agregar escala</button>
+        <button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Nuevo plan</button>
       </div>
-      <div class="precios-grid" id="precios-grid">
-        <div class="loading">Cargando precios...</div>
+
+      <!-- Banner turistas -->
+      <div class="tar-turistas">
+        <div class="icon">🌍</div>
+        <div>
+          <div class="txt-title">Acceso libre para turistas y visitantes</div>
+          <div class="txt-sub">Cualquier persona explora el mapa, Loops, FotoLoops y eventos <strong style="color:#fff;">sin registrarse ni descargar ninguna app</strong>. El municipio paga, el turista accede sin barreras.</div>
+        </div>
+      </div>
+
+      <div class="tar-nota">
+        📄 <span>Precios en <strong>USD</strong>, sin IVA. Se emite <strong>Factura C</strong>. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.</span>
+      </div>
+
+      <!-- Municipios -->
+      <div class="tar-section-title">
+        <div class="tar-st-icon">🏛️</div>
+        <div class="tar-st-text">
+          <h3>Municipios</h3>
+          <p>Presencia institucional · Loops · FotoLoops · Eventos</p>
+        </div>
+        <span class="tar-badge tar-badge-muni">Sector público</span>
+      </div>
+      <div class="precios-grid" id="precios-grid-muni" style="margin-bottom:8px;">
+        <div class="loading">Cargando...</div>
+      </div>
+
+      <!-- Negocios -->
+      <div class="tar-section-title">
+        <div class="tar-st-icon">🏪</div>
+        <div class="tar-st-text">
+          <h3>Negocios</h3>
+          <p>Ficha comercial · Fotos · Contacto · Estadísticas</p>
+        </div>
+        <span class="tar-badge tar-badge-neg">Comercio privado</span>
+      </div>
+      <div class="precios-grid" id="precios-grid-neg" style="margin-bottom:8px;">
+        <div class="loading">Cargando...</div>
+      </div>
+
+      <div style="font-size:11px;color:var(--gr);text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd);">
+        Urban Loop 360° · Tarifario sujeto a actualización · <span id="tar-last-update"></span>
       </div>
     </div>
 
@@ -360,34 +442,68 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 <!-- MODAL PRECIO -->
 <div class="modal-bg" id="modal-precio-bg" onclick="if(event.target===this)Cobros.cerrarModal('precio')">
   <div class="modal">
-    <h2 id="modal-precio-titulo">Nueva escala de precio</h2>
+    <h2 id="modal-precio-titulo">Nuevo plan</h2>
     <input type="hidden" id="pp-id">
 
-    <label>Nombre de la escala</label>
-    <input type="text" id="pp-nombre" placeholder="Ej: Municipio mediano">
+    <label>Tipo de plan</label>
+    <select id="pp-tipo" onchange="Cobros.toggleCamposPlan()">
+      <option value="municipio">🏛️ Municipio</option>
+      <option value="negocio">🏪 Negocio</option>
+    </select>
 
-    <label>Habitantes mínimo</label>
-    <input type="number" id="pp-min" placeholder="Ej: 10000">
+    <label>Nombre del plan</label>
+    <input type="text" id="pp-nombre" placeholder="Ej: Ciudad Grande">
 
-    <label>Habitantes máximo</label>
-    <input type="number" id="pp-max" placeholder="Ej: 20000 (dejar vacío para 'más de X')">
+    <label>Rango de habitantes / descripción</label>
+    <input type="text" id="pp-rango" placeholder="Ej: 25.001 – 100.000 habitantes">
 
-    <label>Precio mensual ($)</label>
-    <input type="number" id="pp-precio" placeholder="Ej: 100000">
+    <label>Precio mensual (USD)</label>
+    <input type="number" id="pp-precio" placeholder="Ej: 190" step="1" min="0">
 
-    <label>Tipo</label>
-    <select id="pp-tipo">
+    <label>Cargo de alta única (USD, 0 = sin cargo)</label>
+    <input type="number" id="pp-setup" placeholder="Ej: 50" step="1" min="0">
+
+    <!-- Campos municipio -->
+    <div id="pp-campos-muni">
+      <label>Loops incluidos</label>
+      <input type="number" id="pp-loops" placeholder="Ej: 35" min="0">
+      <label>FotoLoops incluidos</label>
+      <input type="number" id="pp-fotoloops" placeholder="Ej: 35" min="0">
+      <label>Eventos tradicionales incluidos</label>
+      <input type="number" id="pp-eventos" placeholder="Ej: 15" min="0">
+    </div>
+
+    <!-- Campos negocio -->
+    <div id="pp-campos-neg" style="display:none;">
+      <label>Fotos incluidas</label>
+      <input type="number" id="pp-fotos" placeholder="Ej: 5" min="0">
+    </div>
+
+    <label>Incluye (una funcionalidad por línea)</label>
+    <textarea id="pp-features" placeholder="Pin verificado en mapa&#10;Datos institucionales oficiales&#10;Soporte por email"></textarea>
+
+    <label>Nota / descripción corta</label>
+    <input type="text" id="pp-notas" placeholder="Ej: El plan más elegido">
+
+    <label>¿Plan destacado? (Popular)</label>
+    <select id="pp-featured">
+      <option value="false">No</option>
+      <option value="true">Sí — mostrar como Popular</option>
+    </select>
+
+    <!-- campo orden para mantener posición -->
+    <input type="hidden" id="pp-orden">
+
+    <label style="display:none">Tipo legacy</label>
+    <select id="pp-tipo-legacy" style="display:none">
       <option value="municipio">Municipio</option>
       <option value="comercio">Comercio</option>
       <option value="ambos">Ambos</option>
     </select>
 
-    <label>Notas</label>
-    <textarea id="pp-notas" placeholder="Ej: Incluye hasta 3 usuarios admin"></textarea>
-
-    <div class="modal-btns">
+    <div class="modal-btns" style="margin-top:20px;">
       <button class="btn-secondary" onclick="Cobros.cerrarModal('precio')">Cancelar</button>
-      <button class="btn-primary" onclick="Cobros.guardarPrecio()">Guardar</button>
+      <button class="btn-primary" onclick="Cobros.guardarPrecio()">Guardar plan</button>
     </div>
   </div>
 </div>
@@ -491,8 +607,12 @@ const Cobros = {
       });
 
       // Precios
-      const snapP = await db.collection('precios').orderBy('min').get();
+      let snapP = await db.collection('precios').orderBy('orden').get();
       this._precios = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Si no hay planes, carga los defaults
+      if (!this._precios.length) {
+        await this._inicializarPlanesDefault();
+      }
 
       this._poblarFiltros();
       this.filtrar();
@@ -667,49 +787,111 @@ const Cobros = {
     }
   },
 
-  // ── Modal precios ──────────────────────────────────────────────────
-  renderPrecios() {
-    if (!this._precios.length) {
-      document.getElementById('precios-grid').innerHTML =
-        '<div class="loading">Sin escalas de precio. Agregá la primera.</div>';
-      return;
+  // ── Tarifario completo ─────────────────────────────────────────────
+  _planesDefault() {
+    return [
+      // MUNICIPIOS
+      { tipo:'municipio', orden:1, nombre:'Pueblo Chico',   rango:'Hasta 5.000 habitantes',          precio:90,  setup:50, loops:10, fotoloops:10, eventos:5,  fotos:0, features:['Pin verificado en mapa','Datos institucionales oficiales','Soporte por email'], notas:'Ideal para parajes y municipios rurales', featured:false },
+      { tipo:'municipio', orden:2, nombre:'Pueblo Mediano', rango:'5.001 – 25.000 habitantes',        precio:140, setup:50, loops:20, fotoloops:20, eventos:10, fotos:0, features:['Pin verificado en mapa','Datos institucionales oficiales','Panel básico de gestión'], notas:'', featured:false },
+      { tipo:'municipio', orden:3, nombre:'Ciudad Grande',  rango:'25.001 – 100.000 habitantes',      precio:190, setup:50, loops:35, fotoloops:35, eventos:15, fotos:0, features:['Pin verificado en mapa','Datos institucionales oficiales','Estadísticas mensuales','Soporte telefónico'], notas:'El plan más elegido', featured:true },
+      { tipo:'municipio', orden:4, nombre:'Metrópoli',      rango:'Más de 100.000 habitantes',        precio:290, setup:50, loops:60, fotoloops:60, eventos:30, fotos:0, features:['Pin verificado en mapa','Datos institucionales oficiales','Estadísticas avanzadas','Gestor de cuenta dedicado'], notas:'Para grandes ciudades y capitales', featured:false },
+      // NEGOCIOS
+      { tipo:'negocio', orden:5, nombre:'Negocio Chico',    rango:'Local / Comercio de barrio',       precio:15,  setup:0,  loops:0, fotoloops:0, eventos:0, fotos:2,  features:['Pin en mapa verificado','Nombre, teléfono y dirección','Soporte por email'], notas:'Kioscos, talleres, comercios familiares', featured:false },
+      { tipo:'negocio', orden:6, nombre:'Negocio Mediano',  rango:'PyME / Comercio establecido',      precio:23,  setup:0,  loops:0, fotoloops:0, eventos:0, fotos:5,  features:['Pin en mapa verificado','Nombre, teléfono y dirección','Horarios de atención','Link a redes sociales'], notas:'El más popular entre comercios', featured:true },
+      { tipo:'negocio', orden:7, nombre:'Negocio Grande',   rango:'Empresa / Cadena local',           precio:40,  setup:0,  loops:0, fotoloops:0, eventos:0, fotos:10, features:['Pin en mapa verificado','Nombre, teléfono y dirección','Horarios de atención','Botón WhatsApp / reserva online','Estadísticas de visitas'], notas:'Hoteles, restaurantes, cadenas', featured:false },
+      { tipo:'negocio', orden:8, nombre:'Mayorista / Premium', rango:'Franquicia / Empresa regional', precio:80,  setup:0,  loops:0, fotoloops:0, eventos:0, fotos:15, features:['Pin en mapa verificado','Nombre, teléfono y dirección','Horarios de atención','Botón WhatsApp / reserva online','Estadísticas avanzadas','Posición preferencial en zona'], notas:'Para presencia regional consolidada', featured:false },
+    ];
+  },
+
+  async _inicializarPlanesDefault() {
+    const planes = this._planesDefault();
+    for (const p of planes) {
+      await db.collection('precios').add(p);
     }
-    document.getElementById('precios-grid').innerHTML = this._precios.map(p => {
-      const rango = p.max
-        ? `${Number(p.min).toLocaleString('es-AR')} a ${Number(p.max).toLocaleString('es-AR')} hab.`
-        : `Más de ${Number(p.min).toLocaleString('es-AR')} hab.`;
-      return `<div class="precio-card">
-        <div class="rango">${rango}</div>
-        <div class="monto">$${Number(p.precio).toLocaleString('es-AR')}</div>
-        <div class="detalle">${p.nombre || ''} · por mes</div>
-        ${p.notas ? `<div class="detalle" style="margin-top:4px;font-style:italic;">${p.notas}</div>` : ''}
-        <button class="btn-edit" onclick="Cobros.abrirModalPrecio('${p.id}')">✏ Editar</button>
-      </div>`;
-    }).join('');
+    const snap = await db.collection('precios').orderBy('orden').get();
+    this._precios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
+  renderPrecios() {
+    const munis = this._precios.filter(p => p.tipo === 'municipio').sort((a,b) => (a.orden||0)-(b.orden||0));
+    const negs  = this._precios.filter(p => p.tipo === 'negocio'   || p.tipo === 'comercio').sort((a,b) => (a.orden||0)-(b.orden||0));
+
+    const renderGrid = (items, colorClass) => {
+      if (!items.length) return '<div class="loading" style="padding:20px;">Sin planes. Agregá el primero.</div>';
+      return items.map(p => {
+        const featLines = (p.features || []).map(f => `<li>${f}</li>`).join('');
+        const extraInfo = [];
+        if (p.loops    > 0) extraInfo.push(`${p.loops} Loops`);
+        if (p.fotoloops > 0) extraInfo.push(`${p.fotoloops} FotoLoops`);
+        if (p.eventos  > 0) extraInfo.push(`${p.eventos} eventos`);
+        if (p.fotos    > 0) extraInfo.push(`${p.fotos} fotos`);
+        const altaStr = p.setup > 0 ? `Alta única: USD ${p.setup}` : 'Sin cargo de alta';
+        return `<div class="precio-card ${colorClass}${p.featured ? ' featured' : ''}">
+          <div class="rango">${p.rango || ''}</div>
+          <div class="plan-nombre">${p.nombre || ''}</div>
+          <div class="monto"><span class="cur">USD </span>${p.precio}<span class="per">/mes</span></div>
+          <div class="alta">${altaStr}</div>
+          ${extraInfo.length ? `<div style="font-size:11px;font-weight:700;color:var(--or);margin-bottom:6px;">${extraInfo.join(' · ')}</div>` : ''}
+          <ul class="features">${featLines}</ul>
+          ${p.notas ? `<div style="font-size:10px;color:var(--gr);margin-top:8px;font-style:italic;">${p.notas}</div>` : ''}
+          <button class="btn-edit" onclick="Cobros.abrirModalPrecio('${p.id}')">✏ Editar plan</button>
+        </div>`;
+      }).join('');
+    };
+
+    document.getElementById('precios-grid-muni').innerHTML = renderGrid(munis, 'muni');
+    document.getElementById('precios-grid-neg').innerHTML  = renderGrid(negs,  'neg');
+
+    const upd = localStorage.getItem('ul360_precios_update');
+    const el = document.getElementById('tar-last-update');
+    if (el && upd) el.textContent = 'Actualizado: ' + upd;
+  },
+
+  toggleCamposPlan() {
+    const tipo = document.getElementById('pp-tipo').value;
+    document.getElementById('pp-campos-muni').style.display = tipo === 'municipio' ? '' : 'none';
+    document.getElementById('pp-campos-neg').style.display  = tipo === 'negocio'   ? '' : 'none';
   },
 
   abrirModalPrecio(id) {
     const p = id ? this._precios.find(x => x.id === id) : null;
-    document.getElementById('modal-precio-titulo').textContent = p ? 'Editar escala' : 'Nueva escala de precio';
-    document.getElementById('pp-id').value      = p?.id || '';
-    document.getElementById('pp-nombre').value  = p?.nombre || '';
-    document.getElementById('pp-min').value     = p?.min || '';
-    document.getElementById('pp-max').value     = p?.max || '';
-    document.getElementById('pp-precio').value  = p?.precio || '';
-    document.getElementById('pp-tipo').value    = p?.tipo || 'municipio';
-    document.getElementById('pp-notas').value   = p?.notas || '';
+    document.getElementById('modal-precio-titulo').textContent = p ? 'Editar plan' : 'Nuevo plan';
+    document.getElementById('pp-id').value        = p?.id || '';
+    document.getElementById('pp-tipo').value      = p?.tipo === 'comercio' ? 'negocio' : (p?.tipo || 'municipio');
+    document.getElementById('pp-nombre').value    = p?.nombre || '';
+    document.getElementById('pp-rango').value     = p?.rango || '';
+    document.getElementById('pp-precio').value    = p?.precio || '';
+    document.getElementById('pp-setup').value     = p?.setup ?? 0;
+    document.getElementById('pp-loops').value     = p?.loops || '';
+    document.getElementById('pp-fotoloops').value = p?.fotoloops || '';
+    document.getElementById('pp-eventos').value   = p?.eventos || '';
+    document.getElementById('pp-fotos').value     = p?.fotos || '';
+    document.getElementById('pp-features').value  = (p?.features || []).join('\n');
+    document.getElementById('pp-notas').value     = p?.notas || '';
+    document.getElementById('pp-featured').value  = p?.featured ? 'true' : 'false';
+    document.getElementById('pp-orden').value     = p?.orden || (this._precios.length + 1);
+    this.toggleCamposPlan();
     document.getElementById('modal-precio-bg').classList.add('on');
   },
 
   async guardarPrecio() {
-    const id = document.getElementById('pp-id').value;
+    const id   = document.getElementById('pp-id').value;
+    const tipo = document.getElementById('pp-tipo').value;
     const data = {
-      nombre: document.getElementById('pp-nombre').value,
-      min:    Number(document.getElementById('pp-min').value) || 0,
-      max:    Number(document.getElementById('pp-max').value) || null,
-      precio: Number(document.getElementById('pp-precio').value) || 0,
-      tipo:   document.getElementById('pp-tipo').value,
-      notas:  document.getElementById('pp-notas').value,
+      tipo,
+      nombre:    document.getElementById('pp-nombre').value.trim(),
+      rango:     document.getElementById('pp-rango').value.trim(),
+      precio:    Number(document.getElementById('pp-precio').value)    || 0,
+      setup:     Number(document.getElementById('pp-setup').value)     || 0,
+      loops:     Number(document.getElementById('pp-loops').value)     || 0,
+      fotoloops: Number(document.getElementById('pp-fotoloops').value) || 0,
+      eventos:   Number(document.getElementById('pp-eventos').value)   || 0,
+      fotos:     Number(document.getElementById('pp-fotos').value)     || 0,
+      features:  document.getElementById('pp-features').value.split('\n').map(s=>s.trim()).filter(Boolean),
+      notas:     document.getElementById('pp-notas').value.trim(),
+      featured:  document.getElementById('pp-featured').value === 'true',
+      orden:     Number(document.getElementById('pp-orden').value)     || 99,
+      updatedAt: Date.now(),
     };
     try {
       if (id) {
@@ -717,8 +899,9 @@ const Cobros = {
       } else {
         await db.collection('precios').add(data);
       }
-      const snapP = await db.collection('precios').orderBy('min').get();
-      this._precios = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
+      const snap = await db.collection('precios').orderBy('orden').get();
+      this._precios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      localStorage.setItem('ul360_precios_update', new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}));
       this.renderPrecios();
       this.cerrarModal('precio');
     } catch(e) {
