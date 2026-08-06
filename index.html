@@ -452,7 +452,22 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
     </select>
 
     <label>Nombre del plan</label>
-    <input type="text" id="pp-nombre" placeholder="Ej: Ciudad Grande">
+    <select id="pp-nombre-sel" onchange="Cobros.autocompletarPlan()">
+      <option value="">— Seleccioná un plan —</option>
+      <optgroup label="Municipios" id="pp-opts-muni">
+        <option value="Plan PuebloC">Plan PuebloC</option>
+        <option value="Plan PuebloM">Plan PuebloM</option>
+        <option value="Plan CiudadG">Plan CiudadG</option>
+        <option value="Plan Metro">Plan Metro</option>
+      </optgroup>
+      <optgroup label="Negocios" id="pp-opts-neg">
+        <option value="Plan NegC">Plan NegC</option>
+        <option value="Plan NegM">Plan NegM</option>
+        <option value="Plan NegG">Plan NegG</option>
+        <option value="Plan Mayor">Plan Mayor</option>
+      </optgroup>
+    </select>
+    <input type="hidden" id="pp-nombre">
 
     <label>Rango de habitantes / descripción</label>
     <input type="text" id="pp-rango" placeholder="Ej: 25.001 – 100.000 habitantes">
@@ -503,6 +518,7 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 
     <div class="modal-btns" style="margin-top:20px;">
       <button class="btn-secondary" onclick="Cobros.cerrarModal('precio')">Cancelar</button>
+      <button id="btn-eliminar-plan" style="padding:10px 14px;border-radius:10px;border:none;background:#FEE2E2;color:#991B1B;font-size:13px;font-weight:700;cursor:pointer;display:none;" onclick="Cobros.eliminarPlan()">🗑 Eliminar</button>
       <button class="btn-primary" onclick="Cobros.guardarPrecio()">Guardar plan</button>
     </div>
   </div>
@@ -711,6 +727,9 @@ const Cobros = {
         <div class="nombre-cell">
           <div class="n">${c.nombre || '—'}</div>
           <div class="s">${sub}${c.monto ? ' · $'+Number(c.monto).toLocaleString('es-AR')+'/mes' : ''}</div>
+          <div style="margin-top:4px;">
+            <button onclick="Cobros.eliminarCliente('${c.id}','${c.tipo}','${(c.nombre||'').replace(/'/g,"\\'")}' )" style="font-size:10px;color:#991B1B;background:#FEE2E2;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;">🗑 Eliminar</button>
+          </div>
         </div>
       </td>${celdas}</tr>`;
   },
@@ -851,6 +870,45 @@ const Cobros = {
     const tipo = document.getElementById('pp-tipo').value;
     document.getElementById('pp-campos-muni').style.display = tipo === 'municipio' ? '' : 'none';
     document.getElementById('pp-campos-neg').style.display  = tipo === 'negocio'   ? '' : 'none';
+    // Mostrar solo las opciones del tipo seleccionado
+    document.getElementById('pp-opts-muni').style.display = tipo === 'municipio' ? '' : 'none';
+    document.getElementById('pp-opts-neg').style.display  = tipo === 'negocio'   ? '' : 'none';
+    document.getElementById('pp-nombre-sel').value = '';
+    document.getElementById('pp-nombre').value = '';
+  },
+
+  autocompletarPlan() {
+    const sel = document.getElementById('pp-nombre-sel').value;
+    document.getElementById('pp-nombre').value = sel;
+    // Autocompletar datos del plan default si coincide
+    const defaults = this._planesDefault();
+    const match = defaults.find(p => p.nombre === sel ||
+      (sel === 'Plan PuebloC' && p.nombre === 'Pueblo Chico') ||
+      (sel === 'Plan PuebloM' && p.nombre === 'Pueblo Mediano') ||
+      (sel === 'Plan CiudadG' && p.nombre === 'Ciudad Grande') ||
+      (sel === 'Plan Metro'   && p.nombre === 'Metrópoli') ||
+      (sel === 'Plan NegC'    && p.nombre === 'Negocio Chico') ||
+      (sel === 'Plan NegM'    && p.nombre === 'Negocio Mediano') ||
+      (sel === 'Plan NegG'    && p.nombre === 'Negocio Grande') ||
+      (sel === 'Plan Mayor'   && p.nombre === 'Mayorista / Premium')
+    );
+    if (match) {
+      document.getElementById('pp-tipo').value      = match.tipo === 'negocio' ? 'negocio' : 'municipio';
+      document.getElementById('pp-rango').value     = match.rango;
+      document.getElementById('pp-precio').value    = match.precio;
+      document.getElementById('pp-setup').value     = match.setup;
+      document.getElementById('pp-loops').value     = match.loops;
+      document.getElementById('pp-fotoloops').value = match.fotoloops;
+      document.getElementById('pp-eventos').value   = match.eventos;
+      document.getElementById('pp-fotos').value     = match.fotos;
+      document.getElementById('pp-features').value  = match.features.join('\n');
+      document.getElementById('pp-notas').value     = match.notas;
+      document.getElementById('pp-featured').value  = match.featured ? 'true' : 'false';
+      document.getElementById('pp-orden').value     = match.orden;
+      this.toggleCamposPlan();
+      // Restaurar selección
+      document.getElementById('pp-nombre-sel').value = sel;
+    }
   },
 
   abrirModalPrecio(id) {
@@ -859,6 +917,7 @@ const Cobros = {
     document.getElementById('pp-id').value        = p?.id || '';
     document.getElementById('pp-tipo').value      = p?.tipo === 'comercio' ? 'negocio' : (p?.tipo || 'municipio');
     document.getElementById('pp-nombre').value    = p?.nombre || '';
+    document.getElementById('pp-nombre-sel').value = p?.nombre || '';
     document.getElementById('pp-rango').value     = p?.rango || '';
     document.getElementById('pp-precio').value    = p?.precio || '';
     document.getElementById('pp-setup').value     = p?.setup ?? 0;
@@ -870,8 +929,25 @@ const Cobros = {
     document.getElementById('pp-notas').value     = p?.notas || '';
     document.getElementById('pp-featured').value  = p?.featured ? 'true' : 'false';
     document.getElementById('pp-orden').value     = p?.orden || (this._precios.length + 1);
+    // Mostrar u ocultar botón eliminar
+    document.getElementById('btn-eliminar-plan').style.display = p ? 'inline-block' : 'none';
     this.toggleCamposPlan();
     document.getElementById('modal-precio-bg').classList.add('on');
+  },
+
+  async eliminarPlan() {
+    const id = document.getElementById('pp-id').value;
+    const nombre = document.getElementById('pp-nombre').value || 'este plan';
+    if (!id) return;
+    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await db.collection('precios').doc(id).delete();
+      this._precios = this._precios.filter(p => p.id !== id);
+      this.renderPrecios();
+      this.cerrarModal('precio');
+    } catch(e) {
+      alert('Error al eliminar: ' + e.message);
+    }
   },
 
   async guardarPrecio() {
@@ -906,6 +982,25 @@ const Cobros = {
       this.cerrarModal('precio');
     } catch(e) {
       alert('Error al guardar: ' + e.message);
+    }
+  },
+
+  async eliminarCliente(id, tipo, nombre) {
+    if (!confirm(`¿Eliminar "${nombre}"?\nTambién se borrarán todos sus registros de cobro. Esta acción no se puede deshacer.`)) return;
+    try {
+      const coleccion = tipo === 'municipio' ? 'municipios' : 'negocios';
+      await db.collection(coleccion).doc(id).delete();
+      // Borrar cobros asociados
+      const snapCobros = await db.collection('cobros').where('clienteId','==',id).get();
+      const batch = db.batch();
+      snapCobros.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+      // Actualizar local
+      this._clientes = this._clientes.filter(c => c.id !== id);
+      delete this._cobros[id];
+      this.filtrar();
+    } catch(e) {
+      alert('Error al eliminar: ' + e.message);
     }
   },
 
