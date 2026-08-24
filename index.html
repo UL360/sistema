@@ -195,6 +195,19 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
   cursor: pointer; font-weight: 700;
 }
 .precio-card .btn-edit:hover { background: rgba(255,95,0,.06); }
+.precio-card .btn-share {
+  margin-top: 6px; width: 100%; font-size: 11px; color: #128C7E; background: #E9FBF6;
+  border: 1px solid #B8EDE1; border-radius: 8px; padding: 6px;
+  cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.precio-card .btn-share:hover { background: #DCF8F0; }
+
+.btn-whatsapp {
+  padding: 10px 16px; border-radius: 10px; border: 1px solid #B8EDE1;
+  background: #E9FBF6; color: #128C7E; font-size: 13px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-whatsapp:hover { background: #DCF8F0; }
 
 .tar-nota {
   background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px;
@@ -350,7 +363,10 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
           <div style="font-size:16px;font-weight:700;">Tabla de precios</div>
           <div style="font-size:12px;color:var(--gr);margin-top:2px;">Municipios y negocios · Precios en USD · Factura C</div>
         </div>
-        <button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Nuevo plan</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-whatsapp" onclick="Cobros.compartirTablaWhatsApp()">📤 Compartir todo</button>
+          <button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Nuevo plan</button>
+        </div>
       </div>
 
       <!-- Banner turistas -->
@@ -853,6 +869,7 @@ const Cobros = {
           ${extraInfo.length ? `<div style="font-size:11px;font-weight:700;color:var(--or);margin-bottom:6px;">${extraInfo.join(' · ')}</div>` : ''}
           <ul class="features">${featLines}</ul>
           ${p.notas ? `<div style="font-size:10px;color:var(--gr);margin-top:8px;font-style:italic;">${p.notas}</div>` : ''}
+          <button class="btn-share" onclick="Cobros.compartirPlanWhatsApp('${p.id}')">📤 Compartir por WhatsApp</button>
           <button class="btn-edit" onclick="Cobros.abrirModalPrecio('${p.id}')">✏ Editar plan</button>
         </div>`;
       }).join('');
@@ -864,6 +881,66 @@ const Cobros = {
     const upd = localStorage.getItem('ul360_precios_update');
     const el = document.getElementById('tar-last-update');
     if (el && upd) el.textContent = 'Actualizado: ' + upd;
+  },
+
+  // ── Compartir por WhatsApp ──────────────────────────────────────────
+  _formatoPlanWhatsApp(p) {
+    const extraInfo = [];
+    if (p.loops     > 0) extraInfo.push(`${p.loops} Loops`);
+    if (p.fotoloops > 0) extraInfo.push(`${p.fotoloops} FotoLoops`);
+    if (p.eventos   > 0) extraInfo.push(`${p.eventos} eventos`);
+    if (p.fotos     > 0) extraInfo.push(`${p.fotos} fotos`);
+    const altaStr = p.setup > 0 ? `Alta única: USD ${p.setup}` : 'Sin cargo de alta';
+
+    let txt = `*${p.nombre || ''}*\n`;
+    if (p.rango) txt += `_${p.rango}_\n`;
+    txt += `💵 *USD ${p.precio}/mes*\n`;
+    txt += `${altaStr}\n`;
+    if (extraInfo.length) txt += `📦 ${extraInfo.join(' · ')}\n`;
+    if ((p.features || []).length) {
+      txt += `\nIncluye:\n`;
+      p.features.forEach(f => { txt += `✅ ${f}\n`; });
+    }
+    if (p.notas) txt += `\n_${p.notas}_\n`;
+    return txt;
+  },
+
+  _abrirWhatsApp(texto) {
+    const url = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  },
+
+  compartirPlanWhatsApp(id) {
+    const p = this._precios.find(x => x.id === id);
+    if (!p) return;
+    let txt = `🏙️ *Urban Loop 360°* — Plan\n\n`;
+    txt += this._formatoPlanWhatsApp(p);
+    txt += `\n📄 Precio en USD, sin IVA. Se emite Factura C. Pago mensual anticipado.`;
+    this._abrirWhatsApp(txt);
+  },
+
+  compartirTablaWhatsApp() {
+    const munis = this._precios.filter(p => p.tipo === 'municipio').sort((a,b) => (a.orden||0)-(b.orden||0));
+    const negs  = this._precios.filter(p => p.tipo === 'negocio'   || p.tipo === 'comercio').sort((a,b) => (a.orden||0)-(b.orden||0));
+
+    let txt = `🏙️ *URBAN LOOP 360°*\n📋 *Tabla de precios*\n\n`;
+
+    if (munis.length) {
+      txt += `🏛️ *MUNICIPIOS*\n`;
+      txt += `Presencia institucional · Loops · FotoLoops · Eventos\n\n`;
+      munis.forEach(p => { txt += this._formatoPlanWhatsApp(p) + '\n'; });
+    }
+
+    if (negs.length) {
+      txt += `🏪 *NEGOCIOS*\n`;
+      txt += `Ficha comercial · Fotos · Contacto · Estadísticas\n\n`;
+      negs.forEach(p => { txt += this._formatoPlanWhatsApp(p) + '\n'; });
+    }
+
+    txt += `🌍 Acceso libre para turistas: cualquier persona explora el mapa, Loops, FotoLoops y eventos sin registrarse ni descargar ninguna app.\n\n`;
+    txt += `📄 Precios en USD, sin IVA. Se emite Factura C. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.`;
+
+    this._abrirWhatsApp(txt);
   },
 
   toggleCamposPlan() {
