@@ -40,6 +40,12 @@ body { font-family: var(--fH); background: var(--bg); color: var(--dk); min-heig
   text-align: center; width: 100%; max-width: 340px;
   border: 1px solid var(--bd); box-shadow: 0 4px 24px rgba(0,0,0,.06);
 }
+.login-card { position: relative; }
+.btn-back {
+  position: absolute; top: 14px; left: 14px; font-size: 12px; color: var(--gr);
+  background: none; border: none; cursor: pointer; font-weight: 600;
+}
+.btn-back:hover { color: var(--dk); }
 .login-card .logo { font-size: 36px; margin-bottom: 12px; }
 .login-card h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
 .login-card p { font-size: 13px; color: var(--gr); margin-bottom: 28px; }
@@ -55,6 +61,7 @@ body { font-family: var(--fH); background: var(--bg); color: var(--dk); min-heig
 
 /* ── App shell ── */
 #app { display: none; flex-direction: column; min-height: 100vh; }
+#public-screen { display: none; flex-direction: column; min-height: 100vh; }
 
 header {
   background: var(--wh); border-bottom: 1px solid var(--bd);
@@ -261,8 +268,9 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen">
+<div id="login-screen" style="display:none;">
   <div class="login-card">
+    <button class="btn-back" onclick="Cobros.mostrarPublico()">← Volver</button>
     <div class="logo">🏙️</div>
     <h1>Urban Loop 360°</h1>
     <p>Sistema de cobros · Solo administradores</p>
@@ -277,6 +285,22 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
     </button>
     <div id="login-error">Acceso denegado. Tu cuenta no tiene permisos.</div>
   </div>
+</div>
+
+<!-- VISTA PÚBLICA (sin login) — solo tabla de precios, solo lectura -->
+<div id="public-screen">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">Urban Loop 360°</span>
+      <span class="header-sub">· Tarifario</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-signout" onclick="Cobros.mostrarLogin()">🔒 Admin</button>
+    </div>
+  </header>
+  <main>
+    <div id="panel-precios-publico"></div>
+  </main>
 </div>
 
 <!-- APP -->
@@ -297,6 +321,7 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
     <button class="tab on" onclick="Cobros.tab('pagos',this)">💳 Pagos</button>
     <button class="tab" onclick="Cobros.tab('precios',this)">📋 Tabla de precios</button>
   </div>
+
 
   <main>
 
@@ -358,59 +383,7 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 
     <!-- PANEL PRECIOS -->
     <div id="panel-precios" class="panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div>
-          <div style="font-size:16px;font-weight:700;">Tabla de precios</div>
-          <div style="font-size:12px;color:var(--gr);margin-top:2px;">Municipios y negocios · Precios en USD · Factura C</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn-whatsapp" onclick="Cobros.compartirTablaWhatsApp()">📤 Compartir todo</button>
-          <button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Nuevo plan</button>
-        </div>
-      </div>
-
-      <!-- Banner turistas -->
-      <div class="tar-turistas">
-        <div class="icon">🌍</div>
-        <div>
-          <div class="txt-title">Acceso libre para turistas y visitantes</div>
-          <div class="txt-sub">Cualquier persona explora el mapa, Loops, FotoLoops y eventos <strong style="color:#fff;">sin registrarse ni descargar ninguna app</strong>. El municipio paga, el turista accede sin barreras.</div>
-        </div>
-      </div>
-
-      <div class="tar-nota">
-        📄 <span>Precios en <strong>USD</strong>, sin IVA. Se emite <strong>Factura C</strong>. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.</span>
-      </div>
-
-      <!-- Municipios -->
-      <div class="tar-section-title">
-        <div class="tar-st-icon">🏛️</div>
-        <div class="tar-st-text">
-          <h3>Municipios</h3>
-          <p>Presencia institucional · Loops · FotoLoops · Eventos</p>
-        </div>
-        <span class="tar-badge tar-badge-muni">Sector público</span>
-      </div>
-      <div class="precios-grid" id="precios-grid-muni" style="margin-bottom:8px;">
-        <div class="loading">Cargando...</div>
-      </div>
-
-      <!-- Negocios -->
-      <div class="tar-section-title">
-        <div class="tar-st-icon">🏪</div>
-        <div class="tar-st-text">
-          <h3>Negocios</h3>
-          <p>Ficha comercial · Fotos · Contacto · Estadísticas</p>
-        </div>
-        <span class="tar-badge tar-badge-neg">Comercio privado</span>
-      </div>
-      <div class="precios-grid" id="precios-grid-neg" style="margin-bottom:8px;">
-        <div class="loading">Cargando...</div>
-      </div>
-
-      <div style="font-size:11px;color:var(--gr);text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd);">
-        Urban Loop 360° · Tarifario sujeto a actualización · <span id="tar-last-update"></span>
-      </div>
+      <div class="loading">Cargando...</div>
     </div>
 
   </main>
@@ -584,8 +557,7 @@ const Cobros = {
 
   _checkAuth(user) {
     if (!user) {
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('app').style.display = 'none';
+      this.mostrarPublico();
       return false;
     }
     // Si ADMINS_AUTORIZADOS está vacío, se permite cualquier cuenta (modo desarrollo)
@@ -596,10 +568,38 @@ const Cobros = {
       return false;
     }
     document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('public-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     document.getElementById('user-name').textContent = user.displayName || user.email;
     if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
     return true;
+  },
+
+  // ── Vista pública (sin login) ────────────────────────────────────────
+  mostrarPublico() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('public-screen').style.display = 'flex';
+    document.getElementById('login-error').style.display = 'none';
+    this.cargarPreciosPublico();
+  },
+
+  mostrarLogin() {
+    document.getElementById('public-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  },
+
+  async cargarPreciosPublico() {
+    const cont = document.getElementById('panel-precios-publico');
+    cont.innerHTML = '<div class="loading">Cargando tarifario...</div>';
+    try {
+      const snapP = await db.collection('precios').orderBy('orden').get();
+      this._precios = snapP.docs.map(d => ({ id: d.id, ...d.data() }));
+      cont.innerHTML = this._htmlPanelPrecios(false);
+    } catch(e) {
+      console.error('Error cargando precios públicos:', e);
+      cont.innerHTML = `<div class="loading" style="color:#A32D2D;">No se pudo cargar el tarifario. Intentá de nuevo más tarde.</div>`;
+    }
   },
 
   // ── Tabs ───────────────────────────────────────────────────────────
@@ -847,40 +847,88 @@ const Cobros = {
     this._precios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   },
 
-  renderPrecios() {
+  _renderCardGrid(items, colorClass, isAdmin) {
+    if (!items.length) return '<div class="loading" style="padding:20px;">Sin planes disponibles.</div>';
+    return items.map(p => {
+      const featLines = (p.features || []).map(f => `<li>${f}</li>`).join('');
+      const extraInfo = [];
+      if (p.loops    > 0) extraInfo.push(`${p.loops} Loops`);
+      if (p.fotoloops > 0) extraInfo.push(`${p.fotoloops} FotoLoops`);
+      if (p.eventos  > 0) extraInfo.push(`${p.eventos} eventos`);
+      if (p.fotos    > 0) extraInfo.push(`${p.fotos} fotos`);
+      const altaStr = p.setup > 0 ? `Alta única: USD ${p.setup}` : 'Sin cargo de alta';
+      return `<div class="precio-card ${colorClass}${p.featured ? ' featured' : ''}">
+        <div class="rango">${p.rango || ''}</div>
+        <div class="plan-nombre">${p.nombre || ''}</div>
+        <div class="monto"><span class="cur">USD </span>${p.precio}<span class="per">/mes</span></div>
+        <div class="alta">${altaStr}</div>
+        ${extraInfo.length ? `<div style="font-size:11px;font-weight:700;color:var(--or);margin-bottom:6px;">${extraInfo.join(' · ')}</div>` : ''}
+        <ul class="features">${featLines}</ul>
+        ${p.notas ? `<div style="font-size:10px;color:var(--gr);margin-top:8px;font-style:italic;">${p.notas}</div>` : ''}
+        <button class="btn-share" onclick="Cobros.compartirPlanWhatsApp('${p.id}')">📤 Compartir por WhatsApp</button>
+        ${isAdmin ? `<button class="btn-edit" onclick="Cobros.abrirModalPrecio('${p.id}')">✏ Editar plan</button>` : ''}
+      </div>`;
+    }).join('');
+  },
+
+  // Devuelve el HTML completo del panel de precios (banner + secciones + grillas).
+  // isAdmin=true agrega el botón "+ Nuevo plan"; isAdmin=false es solo lectura.
+  _htmlPanelPrecios(isAdmin) {
     const munis = this._precios.filter(p => p.tipo === 'municipio').sort((a,b) => (a.orden||0)-(b.orden||0));
     const negs  = this._precios.filter(p => p.tipo === 'negocio'   || p.tipo === 'comercio').sort((a,b) => (a.orden||0)-(b.orden||0));
-
-    const renderGrid = (items, colorClass) => {
-      if (!items.length) return '<div class="loading" style="padding:20px;">Sin planes. Agregá el primero.</div>';
-      return items.map(p => {
-        const featLines = (p.features || []).map(f => `<li>${f}</li>`).join('');
-        const extraInfo = [];
-        if (p.loops    > 0) extraInfo.push(`${p.loops} Loops`);
-        if (p.fotoloops > 0) extraInfo.push(`${p.fotoloops} FotoLoops`);
-        if (p.eventos  > 0) extraInfo.push(`${p.eventos} eventos`);
-        if (p.fotos    > 0) extraInfo.push(`${p.fotos} fotos`);
-        const altaStr = p.setup > 0 ? `Alta única: USD ${p.setup}` : 'Sin cargo de alta';
-        return `<div class="precio-card ${colorClass}${p.featured ? ' featured' : ''}">
-          <div class="rango">${p.rango || ''}</div>
-          <div class="plan-nombre">${p.nombre || ''}</div>
-          <div class="monto"><span class="cur">USD </span>${p.precio}<span class="per">/mes</span></div>
-          <div class="alta">${altaStr}</div>
-          ${extraInfo.length ? `<div style="font-size:11px;font-weight:700;color:var(--or);margin-bottom:6px;">${extraInfo.join(' · ')}</div>` : ''}
-          <ul class="features">${featLines}</ul>
-          ${p.notas ? `<div style="font-size:10px;color:var(--gr);margin-top:8px;font-style:italic;">${p.notas}</div>` : ''}
-          <button class="btn-share" onclick="Cobros.compartirPlanWhatsApp('${p.id}')">📤 Compartir por WhatsApp</button>
-          <button class="btn-edit" onclick="Cobros.abrirModalPrecio('${p.id}')">✏ Editar plan</button>
-        </div>`;
-      }).join('');
-    };
-
-    document.getElementById('precios-grid-muni').innerHTML = renderGrid(munis, 'muni');
-    document.getElementById('precios-grid-neg').innerHTML  = renderGrid(negs,  'neg');
-
     const upd = localStorage.getItem('ul360_precios_update');
-    const el = document.getElementById('tar-last-update');
-    if (el && upd) el.textContent = 'Actualizado: ' + upd;
+
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:16px;font-weight:700;">Tabla de precios</div>
+          <div style="font-size:12px;color:var(--gr);margin-top:2px;">Municipios y negocios · Precios en USD · Factura C</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-whatsapp" onclick="Cobros.compartirTablaWhatsApp()">📤 Compartir todo</button>
+          ${isAdmin ? `<button class="btn-primary" style="width:auto;padding:10px 18px;" onclick="Cobros.abrirModalPrecio(null)">+ Nuevo plan</button>` : ''}
+        </div>
+      </div>
+
+      <div class="tar-turistas">
+        <div class="icon">🌍</div>
+        <div>
+          <div class="txt-title">Acceso libre para turistas y visitantes</div>
+          <div class="txt-sub">Cualquier persona explora el mapa, Loops, FotoLoops y eventos <strong style="color:#fff;">sin registrarse ni descargar ninguna app</strong>. El municipio paga, el turista accede sin barreras.</div>
+        </div>
+      </div>
+
+      <div class="tar-nota">
+        📄 <span>Precios en <strong>USD</strong>, sin IVA. Se emite <strong>Factura C</strong>. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.</span>
+      </div>
+
+      <div class="tar-section-title">
+        <div class="tar-st-icon">🏛️</div>
+        <div class="tar-st-text">
+          <h3>Municipios</h3>
+          <p>Presencia institucional · Loops · FotoLoops · Eventos</p>
+        </div>
+        <span class="tar-badge tar-badge-muni">Sector público</span>
+      </div>
+      <div class="precios-grid" style="margin-bottom:8px;">${this._renderCardGrid(munis, 'muni', isAdmin)}</div>
+
+      <div class="tar-section-title">
+        <div class="tar-st-icon">🏪</div>
+        <div class="tar-st-text">
+          <h3>Negocios</h3>
+          <p>Ficha comercial · Fotos · Contacto · Estadísticas</p>
+        </div>
+        <span class="tar-badge tar-badge-neg">Comercio privado</span>
+      </div>
+      <div class="precios-grid" style="margin-bottom:8px;">${this._renderCardGrid(negs, 'neg', isAdmin)}</div>
+
+      <div style="font-size:11px;color:var(--gr);text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd);">
+        Urban Loop 360° · Tarifario sujeto a actualización · ${upd ? `Actualizado: ${upd}` : ''}
+      </div>`;
+  },
+
+  renderPrecios() {
+    document.getElementById('panel-precios').innerHTML = this._htmlPanelPrecios(true);
   },
 
   // ── Compartir por WhatsApp ──────────────────────────────────────────
