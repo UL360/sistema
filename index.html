@@ -221,6 +221,11 @@ main { flex: 1; padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
   padding: 10px 14px; font-size: 11px; color: #78350F; margin-bottom: 18px;
   display: flex; gap: 8px; align-items: flex-start;
 }
+.tar-nota-pago {
+  background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px;
+  padding: 10px 14px; font-size: 11px; color: #1E3A8A; margin-bottom: 18px;
+  display: flex; gap: 8px; align-items: flex-start;
+}
 .tar-turistas {
   background: linear-gradient(135deg,#1E40AF,#FF5F00); border-radius: 12px;
   padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px;
@@ -902,6 +907,10 @@ const Cobros = {
         📄 <span>Precios en <strong>USD</strong>, sin IVA. Se emite <strong>Factura C</strong>. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.</span>
       </div>
 
+      <div class="tar-nota-pago">
+        📅 <span><strong>Fechas de pago:</strong> los abonos se cobran del <strong>1 al 10 de cada mes</strong>. Al contratar, el alta se carga ese mismo día; el primer mes de abono corresponde al mes siguiente.</span>
+      </div>
+
       <div class="tar-section-title">
         <div class="tar-st-icon">🏛️</div>
         <div class="tar-st-text">
@@ -964,6 +973,7 @@ const Cobros = {
     let txt = `🏙️ *Urban Loop 360°* — Plan\n\n`;
     txt += this._formatoPlanWhatsApp(p);
     txt += `\n📄 Precio en USD, sin IVA. Se emite Factura C. Pago mensual anticipado.`;
+    txt += `\n📅 Fechas de pago: del 1 al 10 de cada mes. Al contratar, el alta se carga ese mismo día; el primer mes de abono corresponde al mes siguiente.`;
     this._abrirWhatsApp(txt);
   },
 
@@ -986,7 +996,8 @@ const Cobros = {
     }
 
     txt += `🌍 Acceso libre para turistas: cualquier persona explora el mapa, Loops, FotoLoops y eventos sin registrarse ni descargar ninguna app.\n\n`;
-    txt += `📄 Precios en USD, sin IVA. Se emite Factura C. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.`;
+    txt += `📄 Precios en USD, sin IVA. Se emite Factura C. Pago mensual anticipado. Loops, FotoLoops y eventos adicionales disponibles fuera del plan base.\n`;
+    txt += `📅 Fechas de pago: del 1 al 10 de cada mes. Al contratar, el alta se carga ese mismo día; el primer mes de abono corresponde al mes siguiente.`;
 
     this._abrirWhatsApp(txt);
   },
